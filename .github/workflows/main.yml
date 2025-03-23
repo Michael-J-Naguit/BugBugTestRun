@@ -40,7 +40,26 @@ jobs:
           mkdir -p merged-results
           junitparser merge $(find all-test-results -name "*.xml") merged-results/merged-results.xml
 
-      - name: Display Test Summary
+      - name: Display Merged Test Summary
         run: |
-          echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
-          grep -E "<testsuite|<testcase" merged-results/merged-results.xml >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Merged Test Summary" >> $GITHUB_STEP_SUMMARY
+      
+          # Extract total tests, failures, and errors from merged-results.xml
+          TOTAL_TESTS=$(grep -oP '(?<=tests=")[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
+          FAILED_TESTS=$(grep -oP '(?<=failures=")[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
+          ERRORS=$(grep -oP '(?<=errors=")[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
+      
+          # Display summary in Markdown format
+          echo "| Metric  | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Total Tests | $TOTAL_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed Tests | $FAILED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+      
+          # Highlight if failures exist
+          if [ "$FAILED_TESTS" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+            echo "⚠️ **Some tests failed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🎉 **All tests passed!**" >> $GITHUB_STEP_SUMMARY
+          fi
+
