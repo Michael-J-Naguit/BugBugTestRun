@@ -30,6 +30,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: all-test-results
+          retention-days: 30
 
       - name: Debug File Structure
         run: ls -R all-test-results
@@ -45,7 +46,6 @@ jobs:
         with:
           name: merged-test-results
           path: merged-results/merged-results.xml
-          retention-days: 30
 
       - name: Display Merged Test Summary
         run: |
