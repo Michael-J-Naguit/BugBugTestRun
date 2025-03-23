@@ -13,11 +13,7 @@ jobs:
         uses: bugbug-io/bugbug-github-action@v1.2.1
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
-          testId: "Your BugBug test ID"
-          suiteId: "Your BugBug suite ID"
-          profileName: "Your BugBug profile name"
-          variables: "key1=value1,key2=value2"
-          debug: "true"
+          suiteId: fd0de8e7-4e32-4c5a-b776-a011b545dbc9
 
       - name: Getting Run Output
         run: |
