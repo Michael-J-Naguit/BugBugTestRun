@@ -14,7 +14,7 @@ jobs:
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: fd0de8e7-4e32-4c5a-b776-a011b545dbc9
-          outputPath: test-results.xml
+          outputPath: /home/runner/work/BugBugTestRun/BugBugTestRun/test-results.xml
 
       - name: Getting Run Output
         run: |
