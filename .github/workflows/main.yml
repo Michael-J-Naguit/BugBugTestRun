@@ -13,7 +13,9 @@ jobs:
         uses: bugbug-io/bugbug-github-action@v1.2.1
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
-          suiteId: "fd0de8e7-4e32-4c5a-b776-a011b545dbc9, fd41cbaa-824d-4427-9c08-8bfe7f84abc2"
+          suiteId: |
+            fd0de8e7-4e32-4c5a-b776-a011b545dbc9
+            fd41cbaa-824d-4427-9c08-8bfe7f84abc2
           outputPath: test-results.xml
 
       - name: Getting Run Output
