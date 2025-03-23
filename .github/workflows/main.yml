@@ -34,7 +34,7 @@ jobs:
       - name: Extract Test Results
         run: |
           mkdir -p extracted-results
-          for file in all-test-results/*/*.zip; do
+          for file in all-test-results/*.zip; do
             unzip -o "$file" -d extracted-results
           done
 
