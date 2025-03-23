@@ -43,4 +43,4 @@ jobs:
       - name: Display Test Summary
         run: |
           echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
-          grep -E "<testsuite|<testcase" merged-results.xml >> $GITHUB_STEP_SUMMARY
+          grep -E "<testsuite|<testcase" merged-results/merged-results.xml >> $GITHUB_STEP_SUMMARY
