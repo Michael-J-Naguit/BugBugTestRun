@@ -33,3 +33,14 @@ jobs:
 
       - name: Debug File Structure
         run: ls -R all-test-results
+
+      - name: Merge Test Results from All Subdirectories
+        run: |
+          pip install junitparser
+          mkdir -p merged-results
+          junitparser merge $(find all-test-results -name "*.xml") merged-results/merged-results.xml
+
+      - name: Display Test Summary
+        run: |
+          echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
+          grep -E "<testsuite|<testcase" merged-results.xml >> $GITHUB_STEP_SUMMARY
