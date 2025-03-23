@@ -31,19 +31,5 @@ jobs:
         with:
           path: all-test-results
 
-      - name: Extract Test Results
-        run: |
-          mkdir -p extracted-results
-          for file in all-test-results/*.zip; do
-            unzip -o "$file" -d extracted-results
-          done
-
-      - name: Merge Test Results
-        run: |
-          pip install junitparser
-          junitparser merge extracted-results/*.xml merged-results.xml
-
-      - name: Display Test Summary
-        run: |
-          echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
-          grep -E "<testsuite|<testcase" merged-results.xml >> $GITHUB_STEP_SUMMARY
+      - name: Debug File Structure
+        run: ls -R all-test-results
