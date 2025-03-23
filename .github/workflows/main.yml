@@ -19,3 +19,24 @@ jobs:
       - name: Getting Run Output
         run: |
           echo "Suite Run ID: ${{ steps.run-bugbug-tests.outputs.suiteRunId }}"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: bugbug-test-results-${{ matrix.suite }}
+          path: test-results.xml
+
+      - name: Download All Test Results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results
+
+      - name: Merge Test Results
+        run: |
+          pip install junitparser
+          junitparser merge all-test-results/*.xml merged-results.xml
+
+      - name: Display Test Summary
+        run: |
+          echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
+          grep -E "<testsuite|<testcase" merged-results.xml >> $GITHUB_STEP_SUMMARY
