@@ -14,7 +14,7 @@ jobs:
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: fd0de8e7-4e32-4c5a-b776-a011b545dbc9
-          outputPath: test-results-${{ github.run_id }}.xml
+          outputPath: test-results.xml
 
       - name: Getting Run Output
         run: |
@@ -24,37 +24,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bugbug-test-results-${{ matrix.suite }}
-          path: test-results-${{ github.run_id }}.xml
+          path: test-results.xml
 
-      - name: Download All Test Results
-        uses: actions/download-artifact@v4
-        with:
-          path: all-test-results
-
-      - name: Debug File Structure
-        run: ls -R all-test-results
-
-      - name: Merge Test Results from All Subdirectories
-        run: |
-          pip install junitparser
-          mkdir -p merged-results
-          junitparser merge $(find all-test-results -name "*.xml") merged-results/merged-results.xml
-
-      - name: Upload Merged Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: merged-test-results
-          path: merged-results/merged-results.xml
-
-      - name: Display Merged Test Summary
+      - name: Display Test Summary
         run: |
           echo "### 📝 Merged Test Summary" >> $GITHUB_STEP_SUMMARY
       
           # Extract total test details from ONLY <testsuites>
-          TOTAL_TESTS=$(grep -oP '<testsuites[^>]+tests="\K[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
-          FAILED_TESTS=$(grep -oP '<testsuites[^>]+failures="\K[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
-          ERRORS=$(grep -oP '<testsuites[^>]+errors="\K[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
-          SKIPPED_TESTS=$(grep -oP '<testsuites[^>]+skipped="\K[0-9]+' merged-results/merged-results.xml | awk '{s+=$1} END {print s}')
+          TOTAL_TESTS=$(grep -oP '<testsuites[^>]+tests="\K[0-9]+' test-results.xml | awk '{s+=$1} END {print s}')
+          FAILED_TESTS=$(grep -oP '<testsuites[^>]+failures="\K[0-9]+' test-results.xml | awk '{s+=$1} END {print s}')
+          ERRORS=$(grep -oP '<testsuites[^>]+errors="\K[0-9]+' test-results.xml | awk '{s+=$1} END {print s}')
+          SKIPPED_TESTS=$(grep -oP '<testsuites[^>]+skipped="\K[0-9]+' test-results.xml | awk '{s+=$1} END {print s}')
       
           # Display overall summary
           echo "| Metric        | Count |" >> $GITHUB_STEP_SUMMARY
