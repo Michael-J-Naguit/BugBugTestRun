@@ -1,0 +1,62 @@
+name: Collect and Merge JUnit Test Reports
+
+on:
+  workflow_dispatch:
+
+jobs:
+  collect-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List and Download Artifacts from the Past 30 Days
+        run: |
+          mkdir -p all-test-results
+          echo "Fetching artifacts from past 30 days..."
+          
+          # Fetch all workflow runs in the past 30 days
+          RUNS=$(gh run list --limit 100 --json databaseId,createdAt,status --jq '.[] | select(.status=="completed") | .databaseId' --repo ${{ github.repository }})
+          
+          # Loop through each run and download artifacts
+          for RUN_ID in $RUNS; do
+            echo "Downloading artifacts from workflow run: $RUN_ID"
+            gh run download $RUN_ID --dir all-test-results || echo "No artifacts found for $RUN_ID"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install junitparser for Merging JUnit XML
+        run: pip install junitparser
+
+      - name: Merge JUnit XML Reports
+        run: |
+          mkdir -p merged-results
+          python - <<EOF
+          from junitparser import JUnitXml
+
+          merged_xml = JUnitXml()
+          output_file = "merged-results/merged-test-results.xml"
+
+          import glob
+          test_files = glob.glob("all-test-results/**/*.xml", recursive=True)
+
+          if not test_files:
+              print("No JUnit XML files found to merge.")
+              exit(1)
+
+          for file in test_files:
+              print(f"Processing: {file}")
+              xml = JUnitXml.fromfile(file)
+              merged_xml += xml
+
+          merged_xml.write(output_file)
+          print(f"Merged JUnit XML report saved to: {output_file}")
+          EOF
+
+      - name: Upload Merged JUnit XML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-junit-test-report
+          path: merged-results/merged-test-results.xml
+          retention-days: 30
