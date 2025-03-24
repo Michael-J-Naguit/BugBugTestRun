@@ -62,27 +62,53 @@ jobs:
         run: |
           mkdir -p merged-results
           python - <<EOF
-          from junitparser import JUnitXml
-
+          from junitparser import JUnitXml, TestSuite, TestCase
+      
           merged_xml = JUnitXml()
-          output_file = "merged-results/merged-test-results.xml"
-
+          merged_suites = TestSuite(name="Merged Test Suites")
+      
           import glob
           test_files = glob.glob("all-test-results/**/*.xml", recursive=True)
-
+      
           if not test_files:
               print("No JUnit XML files found to merge.")
               exit(1)
-
+      
+          total_tests = 0
+          total_failures = 0
+          total_errors = 0
+          total_skipped = 0
+          total_time = 0.0
+      
           for file in test_files:
               print(f"Processing: {file}")
               xml = JUnitXml.fromfile(file)
-              merged_xml += xml
-
+      
+              for suite in xml:
+                  total_tests += suite.tests
+                  total_failures += suite.failures
+                  total_errors += suite.errors
+                  total_skipped += suite.skipped
+                  total_time += float(suite.time) if suite.time else 0.0
+                  
+                  # Append test cases individually
+                  for case in suite:
+                      merged_suites.add_testcase(case)
+      
+          # Set final counts in the merged test suite
+          merged_suites.tests = total_tests
+          merged_suites.failures = total_failures
+          merged_suites.errors = total_errors
+          merged_suites.skipped = total_skipped
+          merged_suites.time = total_time
+      
+          merged_xml.add_testsuite(merged_suites)
+      
+          output_file = "merged-results/merged-test-results.xml"
           merged_xml.write(output_file)
           print(f"Merged JUnit XML report saved to: {output_file}")
           EOF
-
+          
       - name: Upload Merged JUnit XML Report
         uses: actions/upload-artifact@v4
         with:
