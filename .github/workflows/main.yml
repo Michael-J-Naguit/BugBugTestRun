@@ -8,7 +8,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run BugBug Cloud Runner
+      - name: Run QRA Stage Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
         with:
