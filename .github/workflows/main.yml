@@ -1,3 +1,5 @@
+name: Run BugBug - QRA Stage Suite
+
 on: workflow_dispatch
 
 jobs:
