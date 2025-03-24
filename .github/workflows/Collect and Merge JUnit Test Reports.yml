@@ -29,10 +29,10 @@ jobs:
           echo "Cutoff Date: $CUTOFF_DATE"
 
           # Fetch workflow runs for the specific workflow name
-          WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="My-Specific-Workflow") | .id' --repo ${{ github.repository }})
+          WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="Run BugBug - QRA Stage Suite") | .id' --repo ${{ github.repository }})
 
           if [ -z "$WORKFLOW_ID" ]; then
-            echo "No workflow found with the name 'My-Specific-Workflow'"
+            echo "No workflow found with the name 'Run BugBug - QRA Stage Suite'"
             exit 1
           fi
 
