@@ -122,7 +122,7 @@ jobs:
       - name: Convert JUnit XML to HTML
         run: |
           mkdir -p test-reports
-          junit2html all-test-results/merged-test-results.xml test-reports/report.html
+          junit2html merged-results/merged-test-results.xml test-reports/report.html
       
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
