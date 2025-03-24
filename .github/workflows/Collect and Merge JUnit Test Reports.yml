@@ -121,7 +121,7 @@ jobs:
       
       - name: Generate Allure HTML Report
         run: |
-          ./allure/bin/allure generate all-test-results --clean -o test-reports
+          ./allure-2.33.0/bin/allure generate all-test-results --clean -o test-reports
       
       - name: Upload Allure HTML Report
         uses: actions/upload-artifact@v4
