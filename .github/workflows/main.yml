@@ -28,7 +28,7 @@ jobs:
 
       - name: Display Test Summary
         run: |
-          echo "### 📝 Merged Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Test Summary" >> $GITHUB_STEP_SUMMARY
       
           # Extract total test details from ONLY <testsuites>
           TOTAL_TESTS=$(grep -oP '<testsuites[^>]+tests="\K[0-9]+' test-results-${{ github.run_id }}.xml | awk '{s+=$1} END {print s}')
@@ -50,7 +50,7 @@ jobs:
           echo "| Test Case | Execution Time (ms) |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------------------|" >> $GITHUB_STEP_SUMMARY
       
-          grep -oP '<testcase name="[^"]+" classname="[^"]+" time="[^"]+"' merged-results/merged-results.xml | while read -r line; do
+          grep -oP '<testcase name="[^"]+" classname="[^"]+" time="[^"]+"' test-results-${{ github.run_id }}.xml | while read -r line; do
             TEST_NAME=$(echo "$line" | grep -oP '(?<=name=")[^"]+')
             EXECUTION_TIME=$(echo "$line" | grep -oP '(?<=time=")[^"]+')
             echo "| $TEST_NAME | $EXECUTION_TIME |" >> $GITHUB_STEP_SUMMARY
