@@ -14,14 +14,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List and Download Artifacts from the Past 30 Days
+      - name: Install jq and coreutils
+        run: sudo apt-get install -y jq coreutils
+
+      - name: List and Download Artifacts from a Specific Workflow (Last 30 Days)
         run: |
           mkdir -p all-test-results
-          echo "Fetching artifacts from past 30 days..."
-          
-          # Fetch all workflow runs in the past 30 days
-          RUNS=$(gh run list --limit 100 --json databaseId,createdAt,status --jq '.[] | select(.status=="completed") | .databaseId' --repo ${{ github.repository }})
-          
+          echo "Fetching artifacts from workflow: My-Specific-Workflow (last 30 days)"
+
+          # Get the current date and calculate the cutoff date (30 days ago)
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          CUTOFF_DATE=$(date -u -d "30 days ago" +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Current Date: $CURRENT_DATE"
+          echo "Cutoff Date: $CUTOFF_DATE"
+
+          # Fetch workflow runs for the specific workflow name
+          WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="My-Specific-Workflow") | .id' --repo ${{ github.repository }})
+
+          if [ -z "$WORKFLOW_ID" ]; then
+            echo "No workflow found with the name 'My-Specific-Workflow'"
+            exit 1
+          fi
+
+          # Get all completed runs and filter those within the last 30 days
+          RUNS=$(gh run list --workflow $WORKFLOW_ID --limit 100 --json databaseId,createdAt,status \
+            --jq ".[] | select(.status==\"completed\" and .createdAt >= \"$CUTOFF_DATE\") | .databaseId" \
+            --repo ${{ github.repository }})
+
+          if [ -z "$RUNS" ]; then
+            echo "No completed workflow runs in the last 30 days."
+            exit 0
+          fi
+
           # Loop through each run and download artifacts
           for RUN_ID in $RUNS; do
             echo "Downloading artifacts from workflow run: $RUN_ID"
@@ -29,6 +53,7 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Install junitparser for Merging JUnit XML
         run: pip install junitparser
