@@ -53,7 +53,7 @@ jobs:
           echo "|-----------|--------------------|" >> $GITHUB_STEP_SUMMARY
       
           grep -oP '<testcase name="[^"]+" classname="[^"]+" time="[^"]+"' test-results-${{ github.run_id }}.xml | while read -r line; do
-            TEST_NAME=$(echo "$line" | grep -oP '(?<=name=")[^"]+')
+            TEST_NAME=$(echo "$line" | grep -oP '(?<=classname=")[^"]+')
             EXECUTION_TIME=$(echo "$line" | grep -oP '(?<=time=")[^"]+')
             echo "| $TEST_NAME | $EXECUTION_TIME |" >> $GITHUB_STEP_SUMMARY
           done
