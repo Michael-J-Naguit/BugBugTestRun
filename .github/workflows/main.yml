@@ -14,7 +14,7 @@ jobs:
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: fd0de8e7-4e32-4c5a-b776-a011b545dbc9
-          outputPath: test-results-${{ github.run_id }}/test-results.xml
+          outputPath: test-results-${{ github.run_id }}.xml
 
       - name: Getting Run Output
         run: |
@@ -24,7 +24,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bugbug-test-results-${{ matrix.suite }}
-          path: test-results-${{ github.run_id }}/test-results.xml
+          path: test-results-${{ github.run_id }}.xml
 
       - name: Download All Test Results
         uses: actions/download-artifact@v4
