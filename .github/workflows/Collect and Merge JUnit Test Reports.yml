@@ -3,6 +3,10 @@ name: Collect and Merge JUnit Test Reports
 on:
   workflow_dispatch:
 
+permissions:
+  actions: read  # Needed to list and download artifacts
+  contents: read  # Required to read repo content
+
 jobs:
   collect-artifacts:
     runs-on: ubuntu-latest
