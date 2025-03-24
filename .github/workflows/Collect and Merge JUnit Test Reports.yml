@@ -116,16 +116,17 @@ jobs:
           path: merged-results/merged-test-results.xml
           retention-days: 30
 
-      - name: Install Allure
-        run: curl -o allure.zip -Ls "https://github.com/allure-framework/allure2/releases/download/2.33.0/allure-2.33.0.zip" && unzip allure.zip -d allure
+      - name: Install junit2html
+        run: pip install junit2html
       
-      - name: Generate Allure HTML Report
+      - name: Convert JUnit XML to HTML
         run: |
-          allure/allure-2.33.0/bin/allure generate merged-results --clean -o test-reports
+          mkdir -p test-reports
+          junit2html merged-results/merged-test-results.xml test-reports/report.html
       
-      - name: Upload Allure HTML Report
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
-          name: Allure-Test-Report
-          path: test-reports/
+          name: JUnit-HTML-Report
+          path: test-reports/report.html
           retention-days: 30
