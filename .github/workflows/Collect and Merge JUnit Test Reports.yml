@@ -121,7 +121,7 @@ jobs:
         
       - name: Parse JUnit XML and Generate Chart
         run: |
-          python3 - << 'EOF'
+         python - <<EOF
           import matplotlib.pyplot as plt
           import pandas as pd
           from junitparser import JUnitXml
@@ -167,7 +167,7 @@ jobs:
           print("\nUnique Test Cases:")
           for test in unique_test_cases:
               print(test)
-          EOF   
+         EOF   
           
       - name: Upload Test Execution Chart
         uses: actions/upload-artifact@v4
