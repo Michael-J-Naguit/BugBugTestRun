@@ -153,7 +153,7 @@ jobs:
           EOF
 
       - name: Upload Test Execution Chart
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-execution-chart
           path: test_execution_chart.png
