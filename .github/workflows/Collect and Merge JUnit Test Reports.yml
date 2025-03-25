@@ -116,15 +116,15 @@ jobs:
           path: merged-results/merged-test-results.xml
           retention-days: 30
 
-      - name: Install dependencies for analysis
+      - name: Install dependencies
         run: pip install junitparser matplotlib pandas
-        
+
       - name: Parse JUnit XML and Generate Chart
         run: |
-          python - <<EOF2
+          python3 - << 'EOF'
           import matplotlib.pyplot as plt
           import pandas as pd
-          from junitparser import JUnitXml
+          from junitparser import JUnitXml, Error, Failure, Skipped
 
           # Load JUnit XML
           xml = JUnitXml.fromfile("merged-results/merged-test-results.xml")
@@ -138,11 +138,11 @@ jobs:
               for case in suite:
                   unique_test_cases.add(case.name)  # Track unique test names
                   if case.result:
-                      if any(isinstance(r, junitparser.Failure) for r in case.result):
+                      if any(isinstance(r, Failure) for r in case.result):
                           failed += 1
-                      elif any(isinstance(r, junitparser.Error) for r in case.result):
+                      elif any(isinstance(r, Error) for r in case.result):
                           errors += 1
-                      elif any(isinstance(r, junitparser.Skipped) for r in case.result):
+                      elif any(isinstance(r, Skipped) for r in case.result):
                           skipped += 1
                   else:
                       passed += 1  # No result means it passed
@@ -160,17 +160,17 @@ jobs:
           plt.figtext(0.5, -0.1, "Unique Test Cases:\n" + "\n".join(unique_test_cases), wrap=True, horizontalalignment='center', fontsize=10)
 
           # Save chart
-          plt.savefig("test-status-chart.png", bbox_inches='tight')
+          plt.savefig("test_status_chart.png", bbox_inches='tight')
 
           print("Test Summary:")
           print(f"Passed: {passed}, Failed: {failed}, Errors: {errors}, Skipped: {skipped}")
           print("\nUnique Test Cases:")
           for test in unique_test_cases:
               print(test)
-          EOF2  
-          
-      - name: Upload Test Execution Chart
+          EOF
+
+      - name: Upload Test Status Chart
         uses: actions/upload-artifact@v4
         with:
           name: test-status-chart
-          path: test-status-chart.png
+          path: test_status_chart.png
