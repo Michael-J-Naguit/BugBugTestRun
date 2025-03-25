@@ -123,7 +123,7 @@ jobs:
           import pandas as pd
           from junitparser import JUnitXml
 
-          xml = JUnitXml.fromfile("report.xml")
+          xml = JUnitXml.fromfile("merged-results/merged-test-results.xml")
           test_cases = [(case.name, case.result) for suite in xml for case in suite]
           df = pd.DataFrame(test_cases, columns=['Test Case', 'Result'])
           df['Status'] = df['Result'].apply(lambda x: 'Failed' if x else 'Passed')
