@@ -116,6 +116,9 @@ jobs:
           path: merged-results/merged-test-results.xml
           retention-days: 30
 
+      - name: Install dependencies for analysis
+        run: pip install junitparser matplotlib pandas
+        
       - name: Parse JUnit XML and generate chart
         run: |
           python <<EOF
