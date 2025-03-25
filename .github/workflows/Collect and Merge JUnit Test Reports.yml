@@ -127,7 +127,7 @@ jobs:
           from junitparser import JUnitXml
 
           # Load JUnit XML
-          xml = JUnitXml.fromfile("report.xml")
+          xml = JUnitXml.fromfile("merged-results/merged-test-results.xml")
 
           # Extract test case names and execution times
           test_cases = []
