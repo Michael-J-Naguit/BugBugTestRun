@@ -177,7 +177,14 @@ jobs:
           # Display values on bars
           for index, value in enumerate(counts):
               plt.text(value, index, str(value), va='center', fontsize=10, fontweight='bold')
+
+          # Format unique test cases text (sorted & wrapped)
+          sorted_test_cases = sorted(unique_test_cases)
+          wrapped_text = "\n".join(textwrap.wrap(", ".join(sorted_test_cases), width=80))
           
+          # Add text below the chart
+          fig.text(0.5, -0.2, f"Unique Test Cases:\n{wrapped_text}", wrap=True, horizontalalignment='center', fontsize=10)
+
           # Save chart with high resolution
           plt.savefig(OUTPUT_CHART, dpi=300, bbox_inches='tight')
           
