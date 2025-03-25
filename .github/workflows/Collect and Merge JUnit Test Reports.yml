@@ -119,25 +119,37 @@ jobs:
       - name: Install dependencies for analysis
         run: pip install junitparser matplotlib pandas
         
-      - name: Parse JUnit XML and generate chart
+      - name: Parse JUnit XML and Generate Chart
         run: |
           python <<EOF
           import matplotlib.pyplot as plt
           import pandas as pd
           from junitparser import JUnitXml
 
-          xml = JUnitXml.fromfile("merged-results/merged-test-results.xml")
-          test_cases = [(case.name, case.result) for suite in xml for case in suite]
-          df = pd.DataFrame(test_cases, columns=['Test Case', 'Result'])
-          df['Status'] = df['Result'].apply(lambda x: 'Failed' if x else 'Passed')
+          # Load JUnit XML
+          xml = JUnitXml.fromfile("report.xml")
 
-          plt.figure(figsize=(6, 4))
-          df['Status'].value_counts().plot(kind='bar', color=['green', 'red'])
-          plt.title("Test Result Summary")
-          plt.xlabel("Test Outcome")
-          plt.ylabel("Number of Tests")
-          plt.xticks(rotation=0)
-          plt.savefig("test_chart.png")
+          # Extract test case names and execution times
+          test_cases = []
+          for suite in xml:
+              for case in suite:
+                  test_cases.append((case.name, float(case.time)))
+
+          # Create DataFrame
+          df = pd.DataFrame(test_cases, columns=['Test Case', 'Execution Time (ms)'])
+          df.sort_values(by="Execution Time (ms)", ascending=False, inplace=True)
+
+          # Generate Bar Chart
+          plt.figure(figsize=(10, 6))
+          plt.barh(df["Test Case"], df["Execution Time (ms)"], color="royalblue")
+          plt.xlabel("Execution Time (ms)")
+          plt.ylabel("Test Case")
+          plt.title("Test Execution Times")
+          plt.gca().invert_yaxis()
+          plt.grid(axis='x', linestyle='--', alpha=0.7)
+          plt.savefig("test_execution_chart.png")
+
+          print(df)  # Print table for logs
           EOF
 
       - name: Upload Test Chart
