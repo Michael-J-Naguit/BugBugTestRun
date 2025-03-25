@@ -126,6 +126,7 @@ jobs:
           import matplotlib.pyplot as plt
           import pandas as pd
           from junitparser import JUnitXml, Error, Failure, Skipped
+          import textwrap
           
           XML_PATH = "merged-results/merged-test-results.xml"
           OUTPUT_CHART = "test_status_chart.png"
