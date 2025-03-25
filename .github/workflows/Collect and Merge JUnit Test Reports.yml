@@ -152,8 +152,8 @@ jobs:
           print(df)  # Print table for logs
           EOF
 
-      - name: Upload Test Chart
-        uses: actions/upload-artifact@v4
+      - name: Upload Test Execution Chart
+        uses: actions/upload-artifact@v3
         with:
-          name: test-results-chart
-          path: test_chart.png
+          name: test-execution-chart
+          path: test_execution_chart.png
