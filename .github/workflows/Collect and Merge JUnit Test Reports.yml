@@ -129,31 +129,48 @@ jobs:
           # Load JUnit XML
           xml = JUnitXml.fromfile("merged-results/merged-test-results.xml")
 
-          # Extract test case names and execution times
-          test_cases = []
+          # Initialize counters
+          passed, failed, errors, skipped = 0, 0, 0, 0
+          unique_test_cases = set()
+
+          # Process each test case
           for suite in xml:
               for case in suite:
-                  test_cases.append((case.name, float(case.time)))
+                  unique_test_cases.add(case.name)  # Track unique test names
+                  if case.result:
+                      if any(isinstance(r, junitparser.Failure) for r in case.result):
+                          failed += 1
+                      elif any(isinstance(r, junitparser.Error) for r in case.result):
+                          errors += 1
+                      elif any(isinstance(r, junitparser.Skipped) for r in case.result):
+                          skipped += 1
+                  else:
+                      passed += 1  # No result means it passed
 
-          # Create DataFrame
-          df = pd.DataFrame(test_cases, columns=['Test Case', 'Execution Time (ms)'])
-          df.sort_values(by="Execution Time (ms)", ascending=False, inplace=True)
+          # Create DataFrame for visualization
+          statuses = ["Passed", "Failed", "Errors", "Skipped"]
+          counts = [passed, failed, errors, skipped]
 
-          # Generate Bar Chart
-          plt.figure(figsize=(10, 6))
-          plt.barh(df["Test Case"], df["Execution Time (ms)"], color="royalblue")
-          plt.xlabel("Execution Time (ms)")
-          plt.ylabel("Test Case")
-          plt.title("Test Execution Times")
-          plt.gca().invert_yaxis()
-          plt.grid(axis='x', linestyle='--', alpha=0.7)
-          plt.savefig("test_execution_chart.png")
+          # Generate Pie Chart
+          plt.figure(figsize=(8, 6))
+          plt.pie(counts, labels=statuses, autopct='%1.1f%%', colors=['green', 'red', 'orange', 'gray'], startangle=140)
+          plt.title("Test Status Breakdown")
 
-          print(df)  # Print table for logs
-          EOF
+          # List unique test cases below the chart
+          plt.figtext(0.5, -0.1, "Unique Test Cases:\n" + "\n".join(unique_test_cases), wrap=True, horizontalalignment='center', fontsize=10)
 
+          # Save chart
+          plt.savefig("test-status-chart.png", bbox_inches='tight')
+
+          print("Test Summary:")
+          print(f"Passed: {passed}, Failed: {failed}, Errors: {errors}, Skipped: {skipped}")
+          print("\nUnique Test Cases:")
+          for test in unique_test_cases:
+              print(test)
+          EOF   
+          
       - name: Upload Test Execution Chart
         uses: actions/upload-artifact@v4
         with:
-          name: test-execution-chart
-          path: test_execution_chart.png
+          name: test-status-chart
+          path: test-status-chart.png
