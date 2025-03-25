@@ -167,35 +167,37 @@ jobs:
           counts = [passed, failed, errors, skipped]
           colors = ['green', 'red', 'orange', 'gray']
           
+          # Create Figure
+          fig, ax = plt.subplots(figsize=(10, 6))
+          
           # Generate Horizontal Bar Chart
-          plt.figure(figsize=(8, 5))
-          plt.barh(statuses, counts, color=colors)
-          plt.xlabel("Number of Tests")
-          plt.ylabel("Test Status")
-          plt.title("Test Status Breakdown")
-          plt.xticks(rotation=45)
+          ax.barh(statuses, counts, color=colors)
+          ax.set_xlabel("Number of Tests")
+          ax.set_ylabel("Test Status")
+          ax.set_title("Test Status Breakdown")
+          ax.set_xlim(0, max(counts) + 2)  # Ensure bars are fully visible
           
           # Display values on bars
           for index, value in enumerate(counts):
-              plt.text(value, index, str(value), va='center', fontsize=10, fontweight='bold')
-
+              ax.text(value + 0.5, index, str(value), va='center', fontsize=10, fontweight='bold')
+          
           # Format unique test cases text (sorted & wrapped)
           sorted_test_cases = sorted(unique_test_cases)
           wrapped_text = "\n".join(textwrap.wrap(", ".join(sorted_test_cases), width=80))
           
           # Add text below the chart
           fig.text(0.5, -0.2, f"Unique Test Cases:\n{wrapped_text}", wrap=True, horizontalalignment='center', fontsize=10)
-
+          
           # Save chart with high resolution
           plt.savefig(OUTPUT_CHART, dpi=300, bbox_inches='tight')
           
-          # Print summary
+          # Print summary in console
           print("\nTest Summary:")
           print(f"Passed: {passed}, Failed: {failed}, Errors: {errors}, Skipped: {skipped}")
           
           # Print unique test cases aligned to the left
           print("\nUnique Test Cases:")
-          for test in sorted(unique_test_cases):  # Sort alphabetically for better readability
+          for test in sorted_test_cases:
               print(f" - {test.ljust(40)}")  # Align left by padding
           
           print(f"Test status chart saved as: {OUTPUT_CHART}")
