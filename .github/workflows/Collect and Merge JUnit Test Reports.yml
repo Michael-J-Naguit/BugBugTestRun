@@ -116,17 +116,29 @@ jobs:
           path: merged-results/merged-test-results.xml
           retention-days: 30
 
-      - name: Install junit2html
-        run: pip install junit2html
-      
-      - name: Convert JUnit XML to HTML
+      - name: Parse JUnit XML and generate chart
         run: |
-          mkdir -p test-reports
-          junit2html merged-results/merged-test-results.xml test-reports/report.html
-      
-      - name: Upload HTML Report
-        uses: actions/upload-artifact@v4
+          python <<EOF
+          import matplotlib.pyplot as plt
+          import pandas as pd
+          from junitparser import JUnitXml
+
+          xml = JUnitXml.fromfile("report.xml")
+          test_cases = [(case.name, case.result) for suite in xml for case in suite]
+          df = pd.DataFrame(test_cases, columns=['Test Case', 'Result'])
+          df['Status'] = df['Result'].apply(lambda x: 'Failed' if x else 'Passed')
+
+          plt.figure(figsize=(6, 4))
+          df['Status'].value_counts().plot(kind='bar', color=['green', 'red'])
+          plt.title("Test Result Summary")
+          plt.xlabel("Test Outcome")
+          plt.ylabel("Number of Tests")
+          plt.xticks(rotation=0)
+          plt.savefig("test_chart.png")
+          EOF
+
+      - name: Upload Test Chart
+        uses: actions/upload-artifact@v3
         with:
-          name: JUnit-HTML-Report
-          path: test-reports/report.html
-          retention-days: 30
+          name: test-results-chart
+          path: test_chart.png
