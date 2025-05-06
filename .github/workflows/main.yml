@@ -48,7 +48,7 @@ jobs:
       
           # Extract and list individual test cases with execution time
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🏆 Individual Test Cases" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Cases" >> $GITHUB_STEP_SUMMARY
           echo "| Test Case | Execution Time (ms) |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------------------|" >> $GITHUB_STEP_SUMMARY
       
