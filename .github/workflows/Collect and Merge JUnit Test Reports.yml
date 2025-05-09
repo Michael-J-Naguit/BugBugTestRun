@@ -116,7 +116,7 @@ jobs:
           retention-days: 30
 
       - name: Install dependencies
-        run: pip install junitparser matplotlib pandas plotlyy
+        run: pip install junitparser matplotlib pandas plotly
 
       - name: Parse JUnit XML and Generate HTML Chart
         run: |
