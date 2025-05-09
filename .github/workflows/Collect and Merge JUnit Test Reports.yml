@@ -122,23 +122,30 @@ jobs:
         run: |
           python3 - <<EOF
           import os
+          import glob
           import plotly.graph_objects as go
           from junitparser import JUnitXml, Error, Failure, Skipped
       
-          XML_PATH = "merged-results/merged-test-results.xml"
+          XML_DIR = "all-test-results"
           OUTPUT_HTML = "test_status_chart.html"
       
-          # Ensure the XML file exists
-          if not os.path.exists(XML_PATH):
-              print(f"ERROR: JUnit XML file '{XML_PATH}' not found.")
+          # Find the most recently modified XML file
+          test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
+          if not test_files:
+              print("No JUnit XML files found.")
               exit(1)
       
-          xml = JUnitXml.fromfile(XML_PATH)
+          latest_file = test_files[0]
+          print(f"Using latest test result file: {latest_file}")
+      
+          xml = JUnitXml.fromfile(latest_file)
       
           passed, failed, errors, skipped = 0, 0, 0, 0
+          test_case_names = []
       
           for suite in xml:
               for case in suite:
+                  test_case_names.append(case.name)  # Collect test case names
                   if case.result:
                       if any(isinstance(r, Failure) for r in case.result):
                           failed += 1
@@ -167,14 +174,27 @@ jobs:
           ))
       
           fig.update_layout(
-              title="Test Status Breakdown",
+              title="Test Status Breakdown (Latest Test Run)",
               xaxis_title="Number of Tests",
               yaxis_title="Test Status",
+              xaxis=dict(
+                  tickmode='linear',
+                  dtick=1  # Ensures whole number ticks
+              ),
               margin=dict(l=100, r=20, t=50, b=50),
               height=400
           )
       
+          # Generate HTML chart
           fig.write_html(OUTPUT_HTML)
+      
+          # Add test case names below the chart in the HTML
+          with open(OUTPUT_HTML, 'a') as f:
+              f.write('<br><br><h3>Test Cases in Latest Run:</h3><ul style="text-align: left;">')
+              for name in test_case_names:
+                  f.write(f'<li>{name}</li>')  # Add each test case name as a list item
+              f.write('</ul>')
+      
           print(f"Test status chart saved as HTML: {OUTPUT_HTML}")
           EOF
 
