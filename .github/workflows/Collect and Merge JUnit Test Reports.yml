@@ -127,7 +127,7 @@ jobs:
           from junitparser import JUnitXml, Error, Failure, Skipped
       
           XML_DIR = "all-test-results"
-          OUTPUT_HTML = "test_status_chart.html"
+          OUTPUT_HTML = "test-report.html"
       
           # Find the most recently modified XML file
           test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
