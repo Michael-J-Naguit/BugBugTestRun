@@ -2,6 +2,11 @@ name: Collect and Merge JUnit Test Reports
 
 on:
   workflow_dispatch:
+    inputs:
+      workflow_name:
+        description: 'Name of the workflow to collect artifacts from'
+        required: true
+        default: 'Run BugBug - QRA Stage Suite'
 
 permissions:
   actions: read  # Needed to list and download artifacts
@@ -20,23 +25,18 @@ jobs:
       - name: List and Download Artifacts from a Specific Workflow (Last 30 Days)
         run: |
           mkdir -p all-test-results
-          echo "Fetching artifacts from workflow: My-Specific-Workflow (last 30 days)"
+          echo "Fetching artifacts from workflow: '${{ inputs.workflow_name }}' (last 30 days)"
 
-          # Get the current date and calculate the cutoff date (30 days ago)
           CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           CUTOFF_DATE=$(date -u -d "30 days ago" +"%Y-%m-%dT%H:%M:%SZ")
-          echo "Current Date: $CURRENT_DATE"
-          echo "Cutoff Date: $CUTOFF_DATE"
 
-          # Fetch workflow runs for the specific workflow name
-          WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="Run BugBug - QRA Stage Suite") | .id' --repo ${{ github.repository }})
+          WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="${{ inputs.workflow_name }}") | .id' --repo ${{ github.repository }})
 
           if [ -z "$WORKFLOW_ID" ]; then
-            echo "No workflow found with the name 'Run BugBug - QRA Stage Suite'"
+            echo "No workflow found with the name '${{ inputs.workflow_name }}'"
             exit 1
           fi
 
-          # Get all completed runs and filter those within the last 30 days
           RUNS=$(gh run list --workflow $WORKFLOW_ID --limit 100 --json databaseId,createdAt,status \
             --jq ".[] | select(.status==\"completed\" and .createdAt >= \"$CUTOFF_DATE\") | .databaseId" \
             --repo ${{ github.repository }})
@@ -46,7 +46,6 @@ jobs:
             exit 0
           fi
 
-          # Loop through each run and download artifacts
           for RUN_ID in $RUNS; do
             echo "Downloading artifacts from workflow run: $RUN_ID"
             gh run download $RUN_ID --dir all-test-results || echo "No artifacts found for $RUN_ID"
