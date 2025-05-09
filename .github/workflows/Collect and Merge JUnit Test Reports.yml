@@ -124,7 +124,7 @@ jobs:
           import os
           import glob
           import plotly.graph_objects as go
-          from junitparser import JUnitXml, Error, Failure, Skipped
+          from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite, TestCase
       
           XML_DIR = "all-test-results"
           OUTPUT_HTML = "test-report.html"
@@ -135,31 +135,41 @@ jobs:
               print("No JUnit XML files found.")
               exit(1)
       
-          latest_file = test_files[0]
-          print(f"Using latest test result file: {latest_file}")
-      
-          xml = JUnitXml.fromfile(latest_file)
-      
+          # Initialize the merged results
+          merged_suites = TestSuite(name="Merged Test Suites")
           passed, failed, errors, skipped = 0, 0, 0, 0
           test_case_names = []
       
-          for suite in xml:
-              for case in suite:
-                  test_case_names.append(case.name)  # Collect test case names
-                  if case.result:
-                      if any(isinstance(r, Failure) for r in case.result):
-                          failed += 1
-                      elif any(isinstance(r, Error) for r in case.result):
-                          errors += 1
-                      elif any(isinstance(r, Skipped) for r in case.result):
-                          skipped += 1
-                  else:
-                      passed += 1
+          # Merge test results from all XML files
+          for file in test_files:
+              print(f"Processing: {file}")
+              xml = JUnitXml.fromfile(file)
+              
+              for suite in xml:
+                  for case in suite:
+                      # Collect the test case names from the most recent test run
+                      if os.path.abspath(file) == os.path.abspath(test_files[0]):
+                          test_case_names.append(case.name)
+      
+                      # Merge the test cases from each file into one merged suite
+                      merged_suites.add_testcase(case)
+      
+                      # Count the results
+                      if case.result:
+                          if any(isinstance(r, Failure) for r in case.result):
+                              failed += 1
+                          elif any(isinstance(r, Error) for r in case.result):
+                              errors += 1
+                          elif any(isinstance(r, Skipped) for r in case.result):
+                              skipped += 1
+                      else:
+                          passed += 1
       
           if passed + failed + errors + skipped == 0:
               print("No test cases found. Skipping chart generation.")
               exit(0)
       
+          # Create a chart based on the merged results
           statuses = ["Passed", "Failed", "Errors", "Skipped"]
           counts = [passed, failed, errors, skipped]
           colors = ['green', 'red', 'orange', 'gray']
@@ -174,7 +184,7 @@ jobs:
           ))
       
           fig.update_layout(
-              title="Test Status Breakdown (Latest Test Run)",
+              title="Test Status Breakdown (Merged Test Results)",
               xaxis_title="Number of Tests",
               yaxis_title="Test Status",
               xaxis=dict(
@@ -185,10 +195,10 @@ jobs:
               height=400
           )
       
-          # Generate HTML chart
+          # Save the merged results chart as HTML
           fig.write_html(OUTPUT_HTML)
       
-          # Add test case names below the chart in the HTML
+          # Add test case names from the latest test run below the chart in the HTML
           with open(OUTPUT_HTML, 'a') as f:
               f.write('<br><br><h3>Test Cases in Latest Run:</h3><ul style="text-align: left;">')
               for name in test_case_names:
@@ -197,6 +207,7 @@ jobs:
       
           print(f"Test status chart saved as HTML: {OUTPUT_HTML}")
           EOF
+
 
       - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
