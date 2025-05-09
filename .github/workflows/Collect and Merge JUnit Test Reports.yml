@@ -200,7 +200,7 @@ jobs:
       
           # Add test case names from the latest test run below the chart in the HTML
           with open(OUTPUT_HTML, 'a') as f:
-              f.write('<br><br><h3>Test Cases in Latest Run:</h3><ul style="text-align: left;">')
+              f.write('<br><br><h3>Test Cases Executed:</h3><ul style="text-align: left;">')
               for name in test_case_names:
                   f.write(f'<li>{name}</li>')  # Add each test case name as a list item
               f.write('</ul>')
