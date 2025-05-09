@@ -119,34 +119,27 @@ jobs:
       - name: Install dependencies
         run: pip install junitparser matplotlib pandas
 
-      - name: Parse JUnit XML and Generate Chart
+      - name: Parse JUnit XML and Generate HTML Chart
         run: |
           python3 - <<EOF
           import os
-          import matplotlib.pyplot as plt
-          import pandas as pd
+          import plotly.graph_objects as go
           from junitparser import JUnitXml, Error, Failure, Skipped
-          import textwrap
-          
+      
           XML_PATH = "merged-results/merged-test-results.xml"
-          OUTPUT_CHART = "test_status_chart.png"
-          
+          OUTPUT_HTML = "test_status_chart.html"
+      
           # Ensure the XML file exists
           if not os.path.exists(XML_PATH):
               print(f"ERROR: JUnit XML file '{XML_PATH}' not found.")
               exit(1)
-          
-          # Load JUnit XML
+      
           xml = JUnitXml.fromfile(XML_PATH)
-          
-          # Initialize counters
+      
           passed, failed, errors, skipped = 0, 0, 0, 0
-          unique_test_cases = set()
-          
-          # Process each test case
+      
           for suite in xml:
               for case in suite:
-                  unique_test_cases.add(case.name)  # Track unique test names
                   if case.result:
                       if any(isinstance(r, Failure) for r in case.result):
                           failed += 1
@@ -155,56 +148,39 @@ jobs:
                       elif any(isinstance(r, Skipped) for r in case.result):
                           skipped += 1
                   else:
-                      passed += 1  # No result means it passed
-          
-          # Check if there are test results to plot
+                      passed += 1
+      
           if passed + failed + errors + skipped == 0:
               print("No test cases found. Skipping chart generation.")
               exit(0)
-          
-          # Data for plotting
+      
           statuses = ["Passed", "Failed", "Errors", "Skipped"]
           counts = [passed, failed, errors, skipped]
           colors = ['green', 'red', 'orange', 'gray']
-          
-          # Create Figure
-          fig, ax = plt.subplots(figsize=(10, 6))
-          
-          # Generate Horizontal Bar Chart
-          ax.barh(statuses, counts, color=colors)
-          ax.set_xlabel("Number of Tests")
-          ax.set_ylabel("Test Status")
-          ax.set_title("Test Status Breakdown")
-          ax.set_xlim(0, max(counts) + 2)  # Ensure bars are fully visible
-          
-          # Display values on bars
-          for index, value in enumerate(counts):
-              ax.text(value + 0.5, index, str(value), va='center', fontsize=10, fontweight='bold')
-          
-          # Format unique test cases text (sorted & wrapped)
-          sorted_test_cases = sorted(unique_test_cases)
-          wrapped_text = "\n".join(textwrap.wrap(", ".join(sorted_test_cases), width=80))
-          
-          # Add text below the chart
-          fig.text(0.5, -0.2, f"Unique Test Cases:\n{wrapped_text}", wrap=True, horizontalalignment='center', fontsize=10)
-          
-          # Save chart with high resolution
-          plt.savefig(OUTPUT_CHART, dpi=300, bbox_inches='tight')
-          
-          # Print summary in console
-          print("\nTest Summary:")
-          print(f"Passed: {passed}, Failed: {failed}, Errors: {errors}, Skipped: {skipped}")
-          
-          # Print unique test cases aligned to the left
-          print("\nUnique Test Cases:")
-          for test in sorted_test_cases:
-              print(f" - {test.ljust(40)}")  # Align left by padding
-          
-          print(f"Test status chart saved as: {OUTPUT_CHART}")
-          EOF
       
+          fig = go.Figure(go.Bar(
+              x=counts,
+              y=statuses,
+              orientation='h',
+              marker_color=colors,
+              text=counts,
+              textposition='outside'
+          ))
+      
+          fig.update_layout(
+              title="Test Status Breakdown",
+              xaxis_title="Number of Tests",
+              yaxis_title="Test Status",
+              margin=dict(l=100, r=20, t=50, b=50),
+              height=400
+          )
+      
+          fig.write_html(OUTPUT_HTML)
+          print(f"Test status chart saved as HTML: {OUTPUT_HTML}")
+          EOF
+
       - name: Upload Test Status Chart
         uses: actions/upload-artifact@v4
         with:
           name: test-status-chart
-          path: test_status_chart.png
+          path: test_status_chart.html
