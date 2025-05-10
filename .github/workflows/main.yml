@@ -30,6 +30,7 @@ jobs:
 
       - name: Display Test Summary
         run: |
+          set -e
           echo "### 📝 Test Summary" >> "$GITHUB_STEP_SUMMARY"
       
           # Check if the test result file exists
@@ -52,7 +53,7 @@ jobs:
           echo "| ⚠️ Errors       | ${ERRORS} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| ⏭️ Skipped      | ${SKIPPED_TESTS} |" >> "$GITHUB_STEP_SUMMARY"
       
-          # Extract and list individual test cases with execution time (in minutes)
+          # Extract and list individual test cases
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Test Cases" >> "$GITHUB_STEP_SUMMARY"
           echo "| Test Case |" >> "$GITHUB_STEP_SUMMARY"
