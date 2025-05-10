@@ -64,7 +64,7 @@ jobs:
       
           grep -oP '<testcase name="[^"]+" classname="[^"]+" time="[^"]+"' "test-results-${{ github.run_id }}.xml" | while read -r line; do
             TEST_NAME=$(echo "$line" | grep -oP '(?<=classname=")[^"]+')
-            ESCAPED_TEST_NAME=$(echo "$TEST_NAME" | sed 's/|/\\|/g')
+            ESCAPED_TEST_NAME=$(echo "$TEST_NAME" | sed 's/&amp;/\&/g' | sed 's/|/\\|/g')
             echo "| \`$ESCAPED_TEST_NAME\` |" >> "$GITHUB_STEP_SUMMARY"
           done
       
