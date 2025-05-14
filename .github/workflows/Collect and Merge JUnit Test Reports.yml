@@ -22,13 +22,16 @@ jobs:
       - name: Install jq and coreutils
         run: sudo apt-get install -y jq coreutils
 
-      - name: List and Download Artifacts from a Specific Workflow (Last 30 Days)
+      - name: List and Download Artifacts from a Specific Workflow (Current Month)
         run: |
           mkdir -p all-test-results
-          echo "Fetching artifacts from workflow: '${{ inputs.workflow_name }}' (last 30 days)"
+          echo "Fetching artifacts from workflow: '${{ inputs.workflow_name }}' (current month)"
 
-          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          CUTOFF_DATE=$(date -u -d "30 days ago" +"%Y-%m-%dT%H:%M:%SZ")
+          # Get the first and last day of the current month in UTC
+          FIRST_DAY=$(date -u +"%Y-%m-01T00:00:00Z")
+          LAST_DAY=$(date -u -d "$(date -u +%Y-%m-01) +1 month -1 day" +"%Y-%m-%dT23:59:59Z")
+
+          echo "Filtering runs between $FIRST_DAY and $LAST_DAY"
 
           WORKFLOW_ID=$(gh workflow list --json id,name --jq '.[] | select(.name=="${{ inputs.workflow_name }}") | .id' --repo ${{ github.repository }})
 
@@ -38,11 +41,11 @@ jobs:
           fi
 
           RUNS=$(gh run list --workflow $WORKFLOW_ID --limit 100 --json databaseId,createdAt,status \
-            --jq ".[] | select(.status==\"completed\" and .createdAt >= \"$CUTOFF_DATE\") | .databaseId" \
+            --jq ".[] | select(.status==\"completed\" and .createdAt >= \"$FIRST_DAY\" and .createdAt <= \"$LAST_DAY\") | .databaseId" \
             --repo ${{ github.repository }})
 
           if [ -z "$RUNS" ]; then
-            echo "No completed workflow runs in the last 30 days."
+            echo "No completed workflow runs in the current month."
             exit 0
           fi
 
@@ -50,9 +53,6 @@ jobs:
             echo "Downloading artifacts from workflow run: $RUN_ID"
             gh run download $RUN_ID --dir all-test-results || echo "No artifacts found for $RUN_ID"
           done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Install junitparser for Merging JUnit XML
         run: pip install junitparser
