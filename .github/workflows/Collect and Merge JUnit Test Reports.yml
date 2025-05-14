@@ -54,8 +54,8 @@ jobs:
             gh run download $RUN_ID --dir all-test-results || echo "No artifacts found for $RUN_ID"
           done
           
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install junitparser for Merging JUnit XML
         run: pip install junitparser
