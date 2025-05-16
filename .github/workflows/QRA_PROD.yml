@@ -3,7 +3,7 @@ name: Run BugBug - QRA Production Suite
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 22 * * *'  # Runs daily at 8:00 AM Brisbane time
+    - cron: '0 2 * * *'  # Runs daily at 12:00 PM (noon) Brisbane time
 
 jobs:
   run-bugbug-tests:
