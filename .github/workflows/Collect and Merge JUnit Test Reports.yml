@@ -217,3 +217,16 @@ jobs:
         with:
           name: test-report
           path: test-report.html
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASS }}
+          subject: "CI Test Report"
+          body: "Tests have completed. See attached report."
+          to: michael.naguit@technocrat.com.au
+          from: GitHub Actions <${{ secrets.SMTP_USER }}>
+          attachments: test-report.html
