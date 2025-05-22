@@ -1,0 +1,77 @@
+name: Run BugBug - AERO Production Suite
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # 4:00 PM Sydney during AEST (UTC+10)
+
+jobs:
+  run-bugbug-tests:
+    runs-on: ubuntu-latest
+    name: Run BugBug Tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run AERO Production Suite
+        id: run-bugbug-tests
+        uses: bugbug-io/bugbug-github-action@v1.2.1
+        with:
+          apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
+          suiteId: 93937426-93b2-4651-8d68-e0874c97296c
+          outputPath: test-results-${{ github.run_id }}.xml
+
+      - name: Getting Run Output
+        run: |
+          echo "Suite Run ID: ${{ steps.run-bugbug-tests.outputs.suiteRunId }}"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: bugbug-test-results-${{ github.run_id }}
+          path: test-results-${{ github.run_id }}.xml
+
+      - name: Display Test Summary
+        run: |
+          set -e
+          echo "### 📝 Test Summary" >> "$GITHUB_STEP_SUMMARY"
+      
+          # Check if the test result file exists
+          if [ ! -f "test-results-${{ github.run_id }}.xml" ]; then
+            echo "❌ Test results file not found." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      
+          # Extract total test details from <testsuites>
+          TOTAL_TESTS=$(grep -oP '<testsuites[^>]+tests="\K[0-9]+' "test-results-${{ github.run_id }}.xml" | awk '{s+=$1} END {print s}')
+          FAILED_TESTS=$(grep -oP '<testsuites[^>]+failures="\K[0-9]+' "test-results-${{ github.run_id }}.xml" | awk '{s+=$1} END {print s}')
+          ERRORS=$(grep -oP '<testsuites[^>]+errors="\K[0-9]+' "test-results-${{ github.run_id }}.xml" | awk '{s+=$1} END {print s}')
+          SKIPPED_TESTS=$(grep -oP '<testsuites[^>]+skipped="\K[0-9]+' "test-results-${{ github.run_id }}.xml" | awk '{s+=$1} END {print s}')
+      
+          # Display overall summary
+          echo "| Metric        | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ✅ Total Tests  | ${TOTAL_TESTS} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ❌ Failed Tests | ${FAILED_TESTS} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ⚠️ Errors       | ${ERRORS} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ⏭️ Skipped      | ${SKIPPED_TESTS} |" >> "$GITHUB_STEP_SUMMARY"
+      
+          # Extract and list individual test cases
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Test Cases" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Test Case |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----------|" >> "$GITHUB_STEP_SUMMARY"
+      
+          grep -oP '<testcase name="[^"]+" classname="[^"]+" time="[^"]+"' "test-results-${{ github.run_id }}.xml" | while read -r line; do
+            TEST_NAME=$(echo "$line" | grep -oP '(?<=classname=")[^"]+')
+            ESCAPED_TEST_NAME=$(echo "$TEST_NAME" | sed 's/&amp;/\&/g' | sed 's/|/\\|/g')
+            echo "| \`$ESCAPED_TEST_NAME\` |" >> "$GITHUB_STEP_SUMMARY"
+          done
+      
+          # Highlight test results
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FAILED_TESTS" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+            echo "⚠️ **Some tests failed!**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "🎉 **All tests passed!**" >> "$GITHUB_STEP_SUMMARY"
+          fi
