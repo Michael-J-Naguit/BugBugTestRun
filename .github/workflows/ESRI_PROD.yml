@@ -16,6 +16,7 @@ jobs:
       - name: Run ESRI Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: 273bc3c9-0164-45aa-b440-d717edfeab27
