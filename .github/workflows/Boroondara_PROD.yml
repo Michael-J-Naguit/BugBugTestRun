@@ -1,4 +1,4 @@
-name: Run BugBug - Boroondara City Council Production Suite
+name: Run BugBug - Boroondara Council Production Suite
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Boroondara City Council Production Suite
+      - name: Run Boroondara Council Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
         continue-on-error: true
