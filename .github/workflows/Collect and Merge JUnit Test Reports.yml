@@ -119,7 +119,7 @@ jobs:
           retention-days: 30
 
       - name: Install dependencies
-        run: pip install junitparser matplotlib pandas plotly
+        run: pip install matplotlib pandas plotly python-docx kaleido
 
       - name: Parse JUnit XML and Generate HTML Chart
         env:
@@ -218,6 +218,108 @@ jobs:
         with:
           name: test-report
           path: ${{ github.event.inputs.workflow_name }} Test Report.html
+
+      - name: Parse JUnit XML and Generate Word Report
+        env:
+          WORKFLOW_NAME: ${{ github.event.inputs.workflow_name }}
+        run: |
+          python3 - <<EOF
+          import os
+          import glob
+          import plotly.graph_objects as go
+          from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite
+          from docx import Document
+          from docx.shared import Inches
+      
+          XML_DIR = "merged-results"
+          REPORT_NAME = "${{ github.event.inputs.workflow_name }} Test Report"
+          OUTPUT_DOCX = REPORT_NAME + ".docx"
+          CHART_IMAGE = REPORT_NAME + ".png"
+      
+          # Find the most recently modified XML file
+          test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
+          if not test_files:
+              print("No JUnit XML files found.")
+              exit(1)
+      
+          # Initialize the merged results
+          merged_suites = TestSuite(name="Merged Test Suites")
+          passed, failed, skipped = 0, 0, 0
+          test_case_names = []
+      
+          for file in test_files:
+              print(f"Processing: {file}")
+              xml = JUnitXml.fromfile(file)
+      
+              for suite in xml:
+                  for case in suite:
+                      if os.path.abspath(file) == os.path.abspath(test_files[0]):
+                          test_case_names.append(case.name)
+      
+                      merged_suites.add_testcase(case)
+      
+                      if case.result:
+                          if any(isinstance(r, (Failure, Error)) for r in case.result):
+                              failed += 1
+                          elif any(isinstance(r, Skipped) for r in case.result):
+                              skipped += 1
+                          else:
+                              passed += 1
+                      else:
+                          passed += 1
+      
+          if passed + failed + skipped == 0:
+              print("No test cases found. Skipping report generation.")
+              exit(0)
+      
+          statuses = ["Passed", "Failed", "Skipped"]
+          counts = [passed, failed, skipped]
+          colors = ['green', 'red', 'gray']
+      
+          fig = go.Figure(go.Bar(
+              x=counts,
+              y=statuses,
+              orientation='h',
+              marker_color=colors,
+              text=counts,
+              textposition='outside'
+          ))
+      
+          fig.update_layout(
+              title="Test Status Breakdown (Merged Test Results)",
+              xaxis_title="Number of Tests",
+              yaxis_title="Test Status",
+              xaxis=dict(
+                  tickmode='linear',
+                  dtick=1
+              ),
+              margin=dict(l=100, r=20, t=50, b=50),
+              height=400
+          )
+      
+          # Save the chart as PNG image
+          fig.write_image(CHART_IMAGE)
+      
+          # Create Word document
+          doc = Document()
+          doc.add_heading('Test Report: ' + REPORT_NAME, level=1)
+          doc.add_paragraph(f"Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
+          doc.add_picture(CHART_IMAGE, width=Inches(5.5))
+          doc.add_paragraph()
+          doc.add_heading("Test Cases Executed", level=2)
+      
+          for name in test_case_names:
+              doc.add_paragraph(name, style='List Bullet')
+      
+          doc.save(OUTPUT_DOCX)
+          print(f"Word report saved as: {OUTPUT_DOCX}")
+          EOF
+      
+      - name: Upload Word Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: ${{ github.event.inputs.workflow_name }} Test Report.docx
 
       - name: Send email
         uses: dawidd6/action-send-mail@v3
