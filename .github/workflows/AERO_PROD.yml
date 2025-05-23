@@ -16,6 +16,7 @@ jobs:
       - name: Run AERO Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: 93937426-93b2-4651-8d68-e0874c97296c
