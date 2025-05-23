@@ -290,8 +290,7 @@ jobs:
               xaxis_title="Number of Tests",
               yaxis_title="Test Status",
               xaxis=dict(
-                  tickmode='linear',
-                  dtick=1
+                  showticklabels=False  # <- hides the numbers on x-axis
               ),
               margin=dict(l=100, r=20, t=50, b=50),
               height=400
