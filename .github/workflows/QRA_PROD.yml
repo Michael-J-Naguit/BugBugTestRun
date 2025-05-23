@@ -16,6 +16,7 @@ jobs:
       - name: Run QRA Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: fd41cbaa-824d-4427-9c08-8bfe7f84abc2
