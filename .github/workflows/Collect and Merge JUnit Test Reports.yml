@@ -60,56 +60,98 @@ jobs:
       - name: Install junitparser for Merging JUnit XML
         run: pip install junitparser
 
-      - name: Merge JUnit XML Reports
+      - name: Parse JUnit XML and Generate HTML Chart
+        env:
+          WORKFLOW_NAME: ${{ github.event.inputs.workflow_name }}
         run: |
-          mkdir -p merged-results
-          python - <<EOF
-          from junitparser import JUnitXml, TestSuite, TestCase
-      
-          merged_xml = JUnitXml()
-          merged_suites = TestSuite(name="Merged Test Suites")
-      
+          python3 - <<EOF
+          import os
           import glob
-          test_files = glob.glob("all-test-results/**/*.xml", recursive=True)
+          import plotly.graph_objects as go
+          from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite
       
+          XML_DIR = "merged-results"
+          OUTPUT_HTML = os.environ["WORKFLOW_NAME"] + " Test Report.html"
+      
+          # Find the most recently modified XML file
+          test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
           if not test_files:
-              print("No JUnit XML files found to merge.")
+              print("No JUnit XML files found.")
               exit(1)
       
-          total_tests = 0
-          total_failures = 0
-          total_errors = 0
-          total_skipped = 0
-          total_time = 0.0
+          # Initialize the merged results
+          merged_suites = TestSuite(name="Merged Test Suites")
+          passed, failed, skipped = 0, 0, 0
+          test_case_names = []
       
+          # Merge test results from all XML files
           for file in test_files:
               print(f"Processing: {file}")
               xml = JUnitXml.fromfile(file)
       
               for suite in xml:
-                  total_tests += suite.tests
-                  total_failures += suite.failures
-                  total_errors += suite.errors
-                  total_skipped += suite.skipped
-                  total_time += float(suite.time) if suite.time else 0.0
-                  
-                  # Append test cases individually
                   for case in suite:
+                      # Collect the test case names from the most recent test run
+                      if os.path.abspath(file) == os.path.abspath(test_files[0]):
+                          test_case_names.append(case.name)
+      
+                      # Merge the test cases from each file into one merged suite
                       merged_suites.add_testcase(case)
       
-          # Set final counts in the merged test suite
-          merged_suites.tests = total_tests
-          merged_suites.failures = total_failures
-          merged_suites.errors = total_errors
-          merged_suites.skipped = total_skipped
-          merged_suites.time = total_time
+                      # Count the results
+                      if case.result:
+                          if any(isinstance(r, (Failure, Error)) for r in case.result):
+                              failed += 1
+                          elif any(isinstance(r, Skipped) for r in case.result):
+                              skipped += 1
+                          else:
+                              passed += 1
+                      else:
+                          passed += 1
       
-          merged_xml.add_testsuite(merged_suites)
+          if passed + failed + skipped == 0:
+              print("No test cases found. Skipping chart generation.")
+              exit(0)
       
-          output_file = "merged-results/merged-test-results.xml"
-          merged_xml.write(output_file)
-          print(f"Merged JUnit XML report saved to: {output_file}")
+          # Create a chart based on the merged results
+          statuses = ["Passed", "Failed", "Skipped"]
+          counts = [passed, failed, skipped]
+          colors = ['green', 'red', 'gray']
+      
+          fig = go.Figure(go.Bar(
+              x=counts,
+              y=statuses,
+              orientation='h',
+              marker_color=colors,
+              text=counts,
+              textposition='outside'
+          ))
+      
+          fig.update_layout(
+              title="Test Status Breakdown (Merged Test Results)",
+              xaxis_title="Number of Tests",
+              yaxis_title="Test Status",
+              xaxis=dict(
+                  tickmode='linear',
+                  dtick=1
+              ),
+              margin=dict(l=100, r=20, t=50, b=50),
+              height=400
+          )
+      
+          # Save the merged results chart as HTML
+          fig.write_html(OUTPUT_HTML)
+      
+          # Add test case names from the latest test run below the chart in the HTML
+          with open(OUTPUT_HTML, 'a') as f:
+              f.write('<br><br><h3>Test Cases Executed:</h3><ul style="text-align: left;">')
+              for name in test_case_names:
+                  f.write(f'<li>{name}</li>')
+              f.write('</ul>')
+      
+          print(f"Test status chart saved as HTML: {OUTPUT_HTML}")
           EOF
+
           
       - name: Upload Merged JUnit XML Report
         uses: actions/upload-artifact@v4
