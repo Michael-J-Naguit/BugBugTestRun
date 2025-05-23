@@ -57,8 +57,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install junitparser for Merging JUnit XML
-        run: pip install junitparser
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install plotly junitparser
 
       - name: Parse JUnit XML and Generate HTML Chart
         env:
