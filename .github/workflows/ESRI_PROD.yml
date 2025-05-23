@@ -22,6 +22,35 @@ jobs:
           suiteId: 273bc3c9-0164-45aa-b440-d717edfeab27
           outputPath: test-results-${{ github.run_id }}.xml
 
+      - name: Remove duplicate test cases from XML
+        run: |
+          python3 - <<EOF
+          import xml.etree.ElementTree as ET
+      
+          file_path = "test-results-${{ github.run_id }}.xml"
+          tree = ET.parse(file_path)
+          root = tree.getroot()
+      
+          seen = set()
+          for testsuite in root.findall("testsuite"):
+              testcases = testsuite.findall("testcase")
+              unique_cases = []
+              for tc in testcases:
+                  key = (tc.attrib.get("name"), tc.attrib.get("classname"))
+                  if key not in seen:
+                      seen.add(key)
+                      unique_cases.append(tc)
+              # Clear and repopulate testcases
+              for tc in testcases:
+                  testsuite.remove(tc)
+              for tc in unique_cases:
+                  testsuite.append(tc)
+              # Update test count
+              testsuite.set("tests", str(len(unique_cases)))
+      
+          tree.write(file_path, encoding="utf-8", xml_declaration=True)
+          EOF
+      
       - name: Getting Run Output
         run: |
           echo "Suite Run ID: ${{ steps.run-bugbug-tests.outputs.suiteRunId }}"
