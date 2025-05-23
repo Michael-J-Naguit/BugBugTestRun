@@ -76,3 +76,9 @@ jobs:
           else
             echo "🎉 **All tests passed!**" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Fail workflow if tests failed
+        if: steps.run-bugbug-tests.outcome == 'failure'
+        run: |
+          echo "BugBug test suite failed, marking workflow as failed."
+          exit 1
