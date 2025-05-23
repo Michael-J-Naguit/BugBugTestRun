@@ -6,7 +6,7 @@ on:
       workflow_name:
         description: 'Name of the workflow to collect artifacts from'
         required: true
-        default: 'Run BugBug - QRA Stage Suite'
+        default: 'Run BugBug - BNE Production Suite'
 
 permissions:
   actions: read  # Needed to list and download artifacts
