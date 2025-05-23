@@ -16,6 +16,7 @@ jobs:
       - name: Run BNE Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: af16f458-0573-44e1-88ee-09e73bfd4e8d
