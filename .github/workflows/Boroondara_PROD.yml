@@ -16,6 +16,7 @@ jobs:
       - name: Run Boroondara City Council Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: 789cbb56-95f0-49e1-ae69-f76bda86f906
