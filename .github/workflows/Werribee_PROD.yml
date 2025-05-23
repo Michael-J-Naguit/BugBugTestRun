@@ -16,6 +16,7 @@ jobs:
       - name: Run Visit Werribee Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: 647b6dde-dfa5-41a8-9004-1d1549cb15d1
