@@ -130,7 +130,7 @@ jobs:
           from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite, TestCase
       
           XML_DIR = "merged-results"
-          OUTPUT_HTML = "${{ github.event.inputs.workflow_name }}-test-report.html"
+          OUTPUT_HTML = "${{ github.event.inputs.workflow_name }} Test Report.html"
       
           # Find the most recently modified XML file
           test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
@@ -216,7 +216,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: ${{ github.event.inputs.workflow_name }}-test-report.html
+          path: ${{ github.event.inputs.workflow_name }} Test Report.html
 
       - name: Send email
         uses: dawidd6/action-send-mail@v3
@@ -229,4 +229,4 @@ jobs:
           body: "Tests have completed for '${{ github.event.inputs.workflow_name }}'. See attached report."
           to: michael.naguit@technocrat.com.au
           from: GitHub Actions <${{ secrets.SMTP_USER }}>
-          attachments: ${{ github.event.inputs.workflow_name }}-test-report.html
+          attachments: ${{ github.event.inputs.workflow_name }} Test Report.html
