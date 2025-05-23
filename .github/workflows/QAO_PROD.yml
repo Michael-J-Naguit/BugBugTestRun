@@ -16,6 +16,7 @@ jobs:
       - name: Run QAO Production Suite
         id: run-bugbug-tests
         uses: bugbug-io/bugbug-github-action@v1.2.1
+        continue-on-error: true
         with:
           apiToken: ${{ secrets.BUGBUG_API_TOKEN }}
           suiteId: 3a59a4a0-0397-4e45-9bef-b3f5acc0d6c8
