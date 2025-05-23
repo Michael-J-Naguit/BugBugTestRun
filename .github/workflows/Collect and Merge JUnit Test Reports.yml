@@ -216,7 +216,7 @@ jobs:
       - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-report-html
           path: ${{ github.event.inputs.workflow_name }} Test Report.html
 
       - name: Parse JUnit XML and Generate Word Report
@@ -318,7 +318,7 @@ jobs:
       - name: Upload Word Test Report
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-report-docx
           path: ${{ github.event.inputs.workflow_name }} Test Report.docx
 
       - name: Send email
@@ -332,4 +332,6 @@ jobs:
           body: "Tests have completed for '${{ github.event.inputs.workflow_name }}'. See attached report."
           to: michael.naguit@technocrat.com.au
           from: GitHub Actions <${{ secrets.SMTP_USER }}>
-          attachments: ${{ github.event.inputs.workflow_name }} Test Report.html
+          attachments: |
+            ${{ github.event.inputs.workflow_name }} Test Report.html
+            ${{ github.event.inputs.workflow_name }} Test Report.docx
