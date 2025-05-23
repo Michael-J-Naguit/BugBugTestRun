@@ -129,7 +129,7 @@ jobs:
           import plotly.graph_objects as go
           from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite, TestCase
       
-          XML_DIR = "all-test-results"
+          XML_DIR = "merged-results"
           OUTPUT_HTML = "${{ github.event.inputs.workflow_name }}-test-report.html"
       
           # Find the most recently modified XML file
