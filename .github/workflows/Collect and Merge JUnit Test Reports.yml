@@ -106,7 +106,7 @@ jobs:
       
           merged_xml.add_testsuite(merged_suites)
       
-          output_file = "merged-results/merged-test-results.xml"
+          output_file = "monthly-results/monthly-test-results.xml"
           merged_xml.write(output_file)
           print(f"Merged JUnit XML report saved to: {output_file}")
           EOF
@@ -114,8 +114,8 @@ jobs:
       - name: Upload Merged JUnit XML Report
         uses: actions/upload-artifact@v4
         with:
-          name: merged-junit-test-report
-          path: merged-results/merged-test-results.xml
+          name: monthly-junit-test-report
+          path: monthly-results/monthly-test-results.xml
           retention-days: 30
 
       - name: Install dependencies
@@ -133,7 +133,7 @@ jobs:
           from docx import Document
           from docx.shared import Inches, Pt
       
-          XML_DIR = "merged-results"
+          XML_DIR = "monthly-results"
           REPORT_NAME = "${{ github.event.inputs.workflow_name }} Test Report"
           OUTPUT_DOCX = REPORT_NAME + ".docx"
           CHART_IMAGE = REPORT_NAME + ".png"
@@ -144,8 +144,8 @@ jobs:
               print("No JUnit XML files found.")
               exit(1)
       
-          # Initialize the merged results
-          merged_suites = TestSuite(name="Merged Test Suites")
+          # Initialize the monthly results
+          monthly_suites = TestSuite(name="Monthly Test Suites")
           passed, failed, skipped = 0, 0, 0
           test_case_names = []
       
@@ -158,7 +158,7 @@ jobs:
                       if os.path.abspath(file) == os.path.abspath(test_files[0]):
                           test_case_names.append(case.name)
       
-                      merged_suites.add_testcase(case)
+                      monthly_suites.add_testcase(case)
       
                       if case.result:
                           if any(isinstance(r, (Failure, Error)) for r in case.result):
@@ -188,7 +188,7 @@ jobs:
           ))
       
           fig.update_layout(
-              title="Test Status Breakdown (Merged Test Results)",
+              title="Test Status Breakdown (Monthly Test Results)",
               xaxis_title="Number of Tests",
               yaxis_title="Test Status",
               xaxis=dict(
