@@ -175,7 +175,7 @@ jobs:
       
           # Extract test case names from the latest file in all-test-results
           ALL_XML_DIR = "all-test-results"
-          all_test_files = sorted(
+          latest_file = max(
               glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True),
               key=os.path.getmtime,
               default=None
@@ -184,7 +184,6 @@ jobs:
               print("No JUnit XML files found in all-test-results.")
               exit(1)
       
-          latest_file = all_test_files[0]
           print(f"Using latest test result file: {latest_file}")
           last_xml = JUnitXml.fromfile(latest_file)
       
