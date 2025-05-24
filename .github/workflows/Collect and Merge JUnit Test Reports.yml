@@ -1,4 +1,4 @@
-name: Collect and Merge JUnit Test Reports
+name: Generate Monthly Test Report
 
 on:
   workflow_dispatch:
