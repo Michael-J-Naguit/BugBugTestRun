@@ -129,27 +129,29 @@ jobs:
           import os
           import glob
           import plotly.graph_objects as go
-          from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite
+          from junitparser import JUnitXml, Error, Failure, Skipped
           from docx import Document
           from docx.shared import Inches, Pt
       
           XML_DIR = "monthly-results"
-          REPORT_NAME = "${{ github.event.inputs.workflow_name }} Test Report"
+          REPORT_NAME = os.environ.get("WORKFLOW_NAME", "Unnamed") + " Test Report"
           OUTPUT_DOCX = REPORT_NAME + ".docx"
           CHART_IMAGE = REPORT_NAME + ".png"
       
           # Find the most recently modified XML file
-          test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
+          test_files = sorted(
+              glob.glob(f"{XML_DIR}/**/*.xml", recursive=True),
+              key=os.path.getmtime,
+              reverse=True
+          )
           if not test_files:
-              print("No JUnit XML files found.")
+              print("No JUnit XML files found in monthly-results.")
               exit(1)
       
-          # Initialize the monthly results
-          print(f"Using merged test result file: {test_files}")
-          xml = JUnitXml.fromfile(test_files)
-          
+          print(f"Using merged test result file: {test_files[0]}")
+          xml = JUnitXml.fromfile(test_files[0])
+      
           passed, failed, skipped = 0, 0, 0
-          
           for suite in xml:
               for case in suite:
                   if case.result:
@@ -166,25 +168,29 @@ jobs:
               print("No test cases found. Skipping report generation.")
               exit(0)
       
+          # Chart data
           statuses = ["Passed", "Failed", "Skipped"]
           counts = [passed, failed, skipped]
-          colors = ['green', 'red', 'gray']
-          
-          # Initialize test case names from lastest test run
-          test_case_names = []
+          colors = ["green", "red", "gray"]
+      
+          # Extract test case names from the latest file in all-test-results
           ALL_XML_DIR = "all-test-results"
-          all_test_files = sorted(glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
+          all_test_files = sorted(
+              glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True),
+              key=os.path.getmtime,
+              reverse=True
+          )
           if not all_test_files:
-              print("No JUnit XML files found.")
+              print("No JUnit XML files found in all-test-results.")
               exit(1)
-            
+      
           latest_file = all_test_files[0]
           print(f"Using latest test result file: {latest_file}")
           last_xml = JUnitXml.fromfile(latest_file)
-          for suite in last_xml:
-              for case in suite:
-                  test_case_names.append(case.name)
       
+          test_case_names = [case.name for suite in last_xml for case in suite]
+      
+          # Generate bar chart
           fig = go.Figure(go.Bar(
               x=counts,
               y=statuses,
@@ -198,33 +204,30 @@ jobs:
               title="Test Status Breakdown (Monthly Test Results)",
               xaxis_title="Number of Tests",
               yaxis_title="Test Status",
-              xaxis=dict(
-                  showticklabels=False  # <- hides the numbers on x-axis
-              ),
+              xaxis=dict(showticklabels=False),
               margin=dict(l=100, r=20, t=50, b=50),
               height=400
           )
       
-          # Save the chart as PNG image
           fig.write_image(CHART_IMAGE)
       
-          # Create Word document
+          # Create Word report
           doc = Document()
-          doc.add_heading('Test Report: ' + REPORT_NAME, level=1)
+          doc.add_heading("Test Report: " + REPORT_NAME, level=1)
           doc.add_paragraph(f"Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
           doc.add_picture(CHART_IMAGE, width=Inches(5.5))
           doc.add_paragraph()
           doc.add_heading("Test Cases Executed", level=2)
       
           for name in test_case_names:
-            p = doc.add_paragraph(name, style='List Bullet')
-            for run in p.runs:
-                run.font.size = Pt(8)
+              p = doc.add_paragraph(name, style='List Bullet')
+              for run in p.runs:
+                  run.font.size = Pt(8)
       
           doc.save(OUTPUT_DOCX)
           print(f"Word report saved as: {OUTPUT_DOCX}")
           EOF
-      
+     
       - name: Upload Word Test Report
         uses: actions/upload-artifact@v4
         with:
