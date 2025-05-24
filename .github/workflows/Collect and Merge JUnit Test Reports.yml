@@ -174,12 +174,11 @@ jobs:
           colors = ["green", "red", "gray"]
       
           # Extract test case names from the latest file in all-test-results
-          test_case_names = []
           ALL_XML_DIR = "all-test-results"
           all_test_files = sorted(
               glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True),
               key=os.path.getmtime,
-              reverse=True
+              default=None
           )
           if not all_test_files:
               print("No JUnit XML files found in all-test-results.")
@@ -189,9 +188,7 @@ jobs:
           print(f"Using latest test result file: {latest_file}")
           last_xml = JUnitXml.fromfile(latest_file)
       
-          for suite in last_xml:
-              for case in suite:
-                  test_case_names.append(case.name)
+          test_case_names = [case.name for suite in last_xml for case in suite]
       
           # Generate bar chart
           fig = go.Figure(go.Bar(
