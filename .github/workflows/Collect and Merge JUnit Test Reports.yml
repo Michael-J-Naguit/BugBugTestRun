@@ -126,6 +126,7 @@ jobs:
           WORKFLOW_NAME: ${{ github.event.inputs.workflow_name }}
         run: |
           python3 - <<EOF
+          import re
           import os
           import glob
           import plotly.graph_objects as go
@@ -175,30 +176,22 @@ jobs:
       
           # Extract test case names from the latest file in all-test-results
           ALL_XML_DIR = "all-test-results"
-          latest_folder = max(
-              [f for f in glob.glob(f"{ALL_XML_DIR}/*") if os.path.isdir(f)],
-              key=os.path.getctime,
-              default=None
-          )
-          if not latest_folder:
-              print("No subdirectories found in all-test-results.")
-              exit(1)      
-          print(f"Using latest folder: {latest_folder}")
           
-          # Now find the newest XML file *inside* that latest folder
-          latest_file = max(
-              glob.glob(f"{latest_folder}/**/*.xml", recursive=True),
-              key=os.path.getctime,
-              default=None
-          )
-          if not latest_file:
-              print(f"No XML files found in latest folder: {latest_folder}")
+          def extract_timestamp(folder_name):
+            match = re.search(r'(\d+)$', folder_name)
+            return int(match.group(1)) if match else -1
+            
+          subdirs = [f for f in glob.glob(f"{ALL_XML_DIR}/*") if os.path.isdir(f)]
+          latest_folder = max(subdirs, key=lambda x: extract_timestamp(os.path.basename(x)), default=None)
+
+          if not latest_folder:
+              print("No test result folders found.")
               exit(1)
-
-          print(f"Using latest test result file: {latest_file}")
-
+          
+          print(f"Using latest folder (by name timestamp): {latest_folder}")
+          
           last_xml = JUnitXml.fromfile(latest_file)
-      
+  
           test_case_names = [case.name for suite in last_xml for case in suite]
       
           # Generate bar chart
