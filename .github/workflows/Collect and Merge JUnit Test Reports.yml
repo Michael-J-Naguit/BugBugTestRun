@@ -62,7 +62,7 @@ jobs:
 
       - name: Merge JUnit XML Reports
         run: |
-          mkdir -p merged-results
+          mkdir -p monthly-results
           python - <<EOF
           from junitparser import JUnitXml, TestSuite, TestCase
       
