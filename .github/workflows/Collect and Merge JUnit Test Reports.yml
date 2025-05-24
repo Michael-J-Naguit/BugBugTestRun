@@ -175,16 +175,27 @@ jobs:
       
           # Extract test case names from the latest file in all-test-results
           ALL_XML_DIR = "all-test-results"
+          latest_folder = max(
+              [f for f in glob.glob(f"{ALL_XML_DIR}/*") if os.path.isdir(f)],
+              key=os.path.getctime,
+              default=None
+          )
+          if not latest_folder:
+              print("No subdirectories found in all-test-results.")
+              exit(1)      
+          print(f"Using latest folder: {latest_folder}")
+          
+          # Now find the newest XML file *inside* that latest folder
           latest_file = max(
-              glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True),
+              glob.glob(f"{latest_folder}/**/*.xml", recursive=True),
               key=os.path.getctime,
               default=None
           )
           if not latest_file:
-              print("No JUnit XML files found in all-test-results.")
+              print(f"No XML files found in latest folder: {latest_folder}")
               exit(1)
-          
-          print(f"Using latest test result file (by creation time): {latest_file}")
+
+          print(f"Using latest test result file: {latest_file}")
 
           last_xml = JUnitXml.fromfile(latest_file)
       
