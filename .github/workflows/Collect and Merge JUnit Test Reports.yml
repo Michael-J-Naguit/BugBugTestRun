@@ -131,7 +131,7 @@ jobs:
           import plotly.graph_objects as go
           from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite
           from docx import Document
-          from docx.shared import Inches
+          from docx.shared import Inches, Pt
       
           XML_DIR = "merged-results"
           REPORT_NAME = "${{ github.event.inputs.workflow_name }} Test Report"
