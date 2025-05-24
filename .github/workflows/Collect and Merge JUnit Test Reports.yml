@@ -179,7 +179,7 @@ jobs:
               exit(1)
             
           latest_file = all_test_files[0]
-          print(f"Using lastest test result file: {latest_file}")
+          print(f"Using latest test result file: {latest_file}")
           last_xml = JUnitXml.fromfile(latest_file)
           for suite in last_xml:
               for case in suite:
