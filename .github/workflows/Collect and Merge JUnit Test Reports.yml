@@ -119,105 +119,7 @@ jobs:
           retention-days: 30
 
       - name: Install dependencies
-        run: pip install matplotlib pandas plotly python-docx kaleido
-
-      - name: Parse JUnit XML and Generate HTML Chart
-        env:
-          WORKFLOW_NAME: ${{ github.event.inputs.workflow_name }}
-        run: |
-          python3 - <<EOF
-          import os
-          import glob
-          import plotly.graph_objects as go
-          from junitparser import JUnitXml, Error, Failure, Skipped, TestSuite
-      
-          XML_DIR = "merged-results"
-          OUTPUT_HTML = "${{ github.event.inputs.workflow_name }} Test Report.html"
-      
-          # Find the most recently modified XML file
-          test_files = sorted(glob.glob(f"{XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
-          if not test_files:
-              print("No JUnit XML files found.")
-              exit(1)
-      
-          # Initialize the merged results
-          merged_suites = TestSuite(name="Merged Test Suites")
-          passed, failed, skipped = 0, 0, 0
-          test_case_names = []
-      
-          # Merge test results from all XML files
-          for file in test_files:
-              print(f"Processing: {file}")
-              xml = JUnitXml.fromfile(file)
-      
-              for suite in xml:
-                  for case in suite:
-                      # Collect the test case names from the most recent test run
-                      if os.path.abspath(file) == os.path.abspath(test_files[0]):
-                          test_case_names.append(case.name)
-      
-                      # Merge the test cases from each file into one merged suite
-                      merged_suites.add_testcase(case)
-      
-                      # Count the results
-                      if case.result:
-                          if any(isinstance(r, (Failure, Error)) for r in case.result):
-                              failed += 1
-                          elif any(isinstance(r, Skipped) for r in case.result):
-                              skipped += 1
-                          else:
-                              passed += 1
-                      else:
-                          passed += 1
-      
-          if passed + failed + skipped == 0:
-              print("No test cases found. Skipping chart generation.")
-              exit(0)
-      
-          # Create a chart based on the merged results
-          statuses = ["Passed", "Failed", "Skipped"]
-          counts = [passed, failed, skipped]
-          colors = ['green', 'red', 'gray']
-      
-          fig = go.Figure(go.Bar(
-              x=counts,
-              y=statuses,
-              orientation='h',
-              marker_color=colors,
-              text=counts,
-              textposition='outside'
-          ))
-      
-          fig.update_layout(
-              title="Test Status Breakdown (Merged Test Results)",
-              xaxis_title="Number of Tests",
-              yaxis_title="Test Status",
-              xaxis=dict(
-                  tickmode='linear',
-                  dtick=1
-              ),
-              margin=dict(l=100, r=20, t=50, b=50),
-              height=400
-          )
-      
-          # Save the merged results chart as HTML
-          fig.write_html(OUTPUT_HTML)
-      
-          # Add test case names from the latest test run below the chart in the HTML
-          with open(OUTPUT_HTML, 'a') as f:
-              f.write('<br><br><h3>Test Cases Executed:</h3><ul style="text-align: left;">')
-              for name in test_case_names:
-                  f.write(f'<li>{name}</li>')
-              f.write('</ul>')
-      
-          print(f"Test status chart saved as HTML: {OUTPUT_HTML}")
-          EOF
-
-      - name: Upload HTML Test Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report-html
-          path: ${{ github.event.inputs.workflow_name }} Test Report.html
+        run: pip install plotly python-docx kaleido      
 
       - name: Parse JUnit XML and Generate Word Report
         env:
@@ -308,7 +210,9 @@ jobs:
           doc.add_heading("Test Cases Executed", level=2)
       
           for name in test_case_names:
-              doc.add_paragraph(name, style='List Bullet')
+            p = doc.add_paragraph(name, style='List Bullet')
+            for run in p.runs:
+                run.font.size = Pt(8)
       
           doc.save(OUTPUT_DOCX)
           print(f"Word report saved as: {OUTPUT_DOCX}")
@@ -332,5 +236,4 @@ jobs:
           to: michael.naguit@technocrat.com.au
           from: GitHub Actions <${{ secrets.SMTP_USER }}>
           attachments: |
-            ${{ github.event.inputs.workflow_name }} Test Report.html
             ${{ github.event.inputs.workflow_name }} Test Report.docx
