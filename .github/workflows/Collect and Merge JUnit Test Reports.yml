@@ -180,7 +180,7 @@ jobs:
               key=os.path.getmtime,
               default=None
           )
-          if not all_test_files:
+          if not latest_file:
               print("No JUnit XML files found in all-test-results.")
               exit(1)
       
