@@ -145,17 +145,13 @@ jobs:
               exit(1)
       
           # Initialize the monthly results
-          latest_file = test_files[0]
-          print(f"Using latest test result file: {latest_file}")
-          xml = JUnitXml.fromfile(latest_file)
+          print(f"Using merged test result file: {test_files}")
+          xml = JUnitXml.fromfile(test_files)
           
           passed, failed, skipped = 0, 0, 0
-          test_case_names = []
           
           for suite in xml:
               for case in suite:
-                  test_case_names.append(case.name)
-          
                   if case.result:
                       if any(isinstance(r, (Failure, Error)) for r in case.result):
                           failed += 1
@@ -173,6 +169,21 @@ jobs:
           statuses = ["Passed", "Failed", "Skipped"]
           counts = [passed, failed, skipped]
           colors = ['green', 'red', 'gray']
+          
+          # Initialize test case names from lastest test run
+          test_case_names = []
+          ALL_XML_DIR = "all-test-results"
+          all_test_files = sorted(glob.glob(f"{ALL_XML_DIR}/**/*.xml", recursive=True), key=os.path.getmtime, reverse=True)
+          if not all_test_files:
+              print("No JUnit XML files found.")
+              exit(1)
+            
+          latest_file = all_test_files[0]
+          print(f"Using lastest test result file: {latest_file}")
+          last_xml = JUnitXml.fromfile(latest_file)
+          for suite in last_xml:
+              for case in suite:
+                  test_case_names.append(case.name)
       
           fig = go.Figure(go.Bar(
               x=counts,
