@@ -145,30 +145,26 @@ jobs:
               exit(1)
       
           # Initialize the monthly results
-          monthly_suites = TestSuite(name="Monthly Test Suites")
+          latest_file = test_files[0]
+          print(f"Using latest test result file: {latest_file}")
+          xml = JUnitXml.fromfile(latest_file)
+          
           passed, failed, skipped = 0, 0, 0
           test_case_names = []
-      
-          for file in test_files:
-              print(f"Processing: {file}")
-              xml = JUnitXml.fromfile(file)
-      
-              for suite in xml:
-                  for case in suite:
-                      if os.path.abspath(file) == os.path.abspath(test_files[0]):
-                          test_case_names.append(case.name)
-      
-                      monthly_suites.add_testcase(case)
-      
-                      if case.result:
-                          if any(isinstance(r, (Failure, Error)) for r in case.result):
-                              failed += 1
-                          elif any(isinstance(r, Skipped) for r in case.result):
-                              skipped += 1
-                          else:
-                              passed += 1
+          
+          for suite in xml:
+              for case in suite:
+                  test_case_names.append(case.name)
+          
+                  if case.result:
+                      if any(isinstance(r, (Failure, Error)) for r in case.result):
+                          failed += 1
+                      elif any(isinstance(r, Skipped) for r in case.result):
+                          skipped += 1
                       else:
                           passed += 1
+                  else:
+                      passed += 1
       
           if passed + failed + skipped == 0:
               print("No test cases found. Skipping report generation.")
